@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/auth.routes.js";
+import itemRoutes from "./routes/item.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
 
 dotenv.config();
 
@@ -20,6 +22,9 @@ app.get("/", (req, res) => {
 
 // AUTH ROUTES
 app.use("/api/auth", authRoutes);
+app.use("/api/items", itemRoutes);
+app.use("/api/admin", adminRoutes);
+// app.use("/api/notifications", notificationRoutes);
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
