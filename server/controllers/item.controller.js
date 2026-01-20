@@ -5,6 +5,16 @@ import User from "../models/User.js";
 
 // CREATE ITEM
 export const createItem = async (req, res) => {
+    const users = await User.find({ _id: { $ne: req.user.userId } });
+
+    await Notification.insertMany(
+      users.map((user) => ({
+        title: "New item added",
+        message: `${item.title} is now available`,
+        userId: user._id,
+      }))
+    );
+
   try {
     const item = await Item.create({
       ...req.body,
