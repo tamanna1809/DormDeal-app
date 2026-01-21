@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, RefreshControl } from "react-native";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import api from "../services/api";
 import { Colors } from "../../constants/Colors";
@@ -9,6 +9,7 @@ import { useAuth } from "../context/AuthContext";
 
 export default function Notifications() {
   const { user } = useAuth();
+  const router = useRouter();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -30,6 +31,18 @@ export default function Notifications() {
     }, [user])
   );
 
+  const handleNotificationPress = async (notification: any) => {
+    if (!notification.isRead) {
+      await handleMarkRead(notification._id);
+    }
+    
+    if (notification.itemId) {
+      // Navigate to the product details
+      // Using 'as any' to bypass strict routing types if dynamic route is tricky
+      router.push(`/product/${notification.itemId}` as any);
+    }
+  };
+
   const handleMarkRead = async (id: string) => {
     try {
       await api.patch(`/notifications/${id}/read`);
@@ -45,7 +58,7 @@ export default function Notifications() {
   const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity 
       style={[styles.item, !item.isRead && styles.unreadItem]}
-      onPress={() => !item.isRead && handleMarkRead(item._id)}
+      onPress={() => handleNotificationPress(item)}
     >
       <View style={styles.iconContainer}>
         <Ionicons 

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
 import { Button } from "../../components/Button";
 import { useAuth } from "../context/AuthContext";
@@ -14,30 +14,32 @@ export default function Profile() {
   const [myItems, setMyItems] = useState<any[]>([]);
   const [loadingItems, setLoadingItems] = useState(false);
 
-  useEffect(() => {
-    const fetchMyItems = async () => {
-      if (!user) return;
-      setLoadingItems(true);
-      try {
-        const res = await api.get("/items");
-        const all = res.data || [];
-        const mine = all.filter(
-          (item: any) =>
-            !item.isDeleted &&
-            item.sellerId &&
-            (item.sellerId._id === user._id || item.sellerId === user._id)
-        );
-        setMyItems(mine);
-      } catch (e) {
-        // fail silently on profile; main feed still works
-        console.error("Failed to load my items", e);
-      } finally {
-        setLoadingItems(false);
-      }
-    };
+  useFocusEffect(
+    useCallback(() => {
+      const fetchMyItems = async () => {
+        if (!user) return;
+        setLoadingItems(true);
+        try {
+          const res = await api.get("/items");
+          const all = res.data || [];
+          const mine = all.filter(
+            (item: any) =>
+              !item.isDeleted &&
+              item.sellerId &&
+              (item.sellerId._id === user._id || item.sellerId === user._id)
+          );
+          setMyItems(mine);
+        } catch (e) {
+          // fail silently on profile; main feed still works
+          console.error("Failed to load my items", e);
+        } finally {
+          setLoadingItems(false);
+        }
+      };
 
-    fetchMyItems();
-  }, [user]);
+      fetchMyItems();
+    }, [user])
+  );
 
   const handleLogout = async () => {
     await logout();

@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator, Platform, ScrollView, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "expo-router";
@@ -40,39 +40,52 @@ export default function Login() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome Back</Text>
-      
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        placeholderTextColor="#9CA3AF"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-      />
-      
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        placeholderTextColor="#9CA3AF"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+    // <KeyboardAvoidingView 
+    //   behavior={Platform.OS === "ios" ? "padding" : "height"}
+    //   style={{ flex: 1 }}
+    // >
+      <ScrollView 
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.container}>
+            <Text style={styles.title}>Welcome Back</Text>
+            
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor="#9CA3AF"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+            />
+            
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor="#9CA3AF"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Login</Text>
-        )}
-      </TouchableOpacity>
-      
-      <TouchableOpacity onPress={() => router.push("/signup")} style={{ marginTop: 20 }}>
-        <Text style={styles.link}>Don't have an account? Sign Up</Text>
-      </TouchableOpacity>
-    </View>
+            <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Login</Text>
+              )}
+            </TouchableOpacity>
+            
+            <TouchableOpacity onPress={() => router.push("/signup")} style={{ marginTop: 20 }}>
+              <Text style={styles.link}>Don't have an account? Sign Up</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableWithoutFeedback>
+      </ScrollView>
+    // </KeyboardAvoidingView>
   );
 }
 

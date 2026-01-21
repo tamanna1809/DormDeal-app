@@ -81,6 +81,7 @@ export default function ProductDetails() {
   if (!item) return null;
 
   const isSeller = user && item.sellerId._id === user._id;
+  const canDelete = user && (isSeller || user.role === "admin");
 
   return (
     <ScreenWrapper style={{ paddingHorizontal: 0 }}>
@@ -155,6 +156,19 @@ export default function ProductDetails() {
                     style={item.status === 'sold' ? { backgroundColor: Colors.light.textSecondary } : {}}
                 />
              </View>
+          )}
+
+          {canDelete && !isSeller && (
+            <View style={{ marginTop: 12, marginBottom: 40 }}>
+              <Button
+                  title="Delete Item (Admin)"
+                  variant="outline"
+                  onPress={handleDelete}
+                  isLoading={actionLoading}
+                  style={{ borderColor: Colors.light.error }}
+                  textStyle={{ color: Colors.light.error }}
+              />
+            </View>
           )}
         </View>
       </ScrollView>

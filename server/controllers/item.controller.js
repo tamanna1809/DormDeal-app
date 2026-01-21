@@ -19,6 +19,7 @@ export const createItem = async (req, res) => {
           title: "New item added",
           message: `${item.title} is now available`,
           userId: user._id,
+          itemId: item._id,
         }))
       );
     }
@@ -74,6 +75,19 @@ export const markSold = async (req, res) => {
   item.status = "sold";
   await item.save();
 
+  // Notify others that item is sold
+  const users = await User.find({ _id: { $ne: req.user.userId } });
+  if (users.length > 0) {
+    await Notification.insertMany(
+      users.map((user) => ({
+        title: "Item Sold",
+        message: `${item.title} has been sold`,
+        userId: user._id,
+        itemId: item._id,
+      }))
+    );
+  }
+
   res.json(item);
 };
 
@@ -83,7 +97,7 @@ export const deleteItem = async (req, res) => {
   const item = await Item.findById(req.params.id);
   if (!item) return res.status(404).json({ message: "Item not found" });
 
-  if (item.sellerId.toString() !== req.user.userId)
+  if (item.sellerId.toString() !== req.user.userId && req.user.role !== "admin")
     return res.status(403).json({ message: "Not allowed" });
 
   item.isDeleted = true;

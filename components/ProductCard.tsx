@@ -42,15 +42,15 @@ export const ProductCard = ({
           style={styles.image}
           contentFit="cover"
         />
+        {status === "sold" && (
+          <View style={styles.soldOverlay}>
+            <Text style={styles.soldText}>SOLD</Text>
+          </View>
+        )}
         <View style={styles.badgeContainer}>
           <View style={[styles.badge, styles.conditionBadge]}>
             <Text style={styles.badgeText}>{condition}</Text>
           </View>
-          {status === "sold" && (
-            <View style={[styles.badge, styles.soldBadge]}>
-              <Text style={styles.badgeText}>SOLD</Text>
-            </View>
-          )}
         </View>
       </View>
       
@@ -132,5 +132,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.light.text,
     lineHeight: 20,
+  },
+  soldOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+  },
+  soldText: {
+    color: "#EF4444",
+    fontSize: 20,
+    fontWeight: "900",
+    transform: [{ rotate: "-15deg" }],
+    borderWidth: 4,
+    borderColor: "#EF4444",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    letterSpacing: 2,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
   },
 });
