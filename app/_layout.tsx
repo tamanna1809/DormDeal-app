@@ -1,24 +1,50 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { Stack, useRouter, useSegments } from "expo-router";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
+import { View, ActivityIndicator } from "react-native";
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+const MainLayout = () => {
+  const { user, isLoading } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
 
-export const unstable_settings = {
-  anchor: '(tabs)',
+  useEffect(() => {
+    if (isLoading) return;
+
+    const inAuthGroup = segments[0] === "(auth)";
+
+    if (user && inAuthGroup) {
+      // Redirect to tabs if user is logged in and trying to access auth screens
+      router.replace("/(tabs)");
+    } else if (!user && !inAuthGroup) {
+      // Redirect to login if user is not logged in and not in auth group
+      router.replace("/(auth)/login");
+    }
+  }, [user, isLoading, segments]);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#4F46E5" />
+      </View>
+    );
+  }
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="product/[id]" />
+    </Stack>
+  );
 };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
+    <AuthProvider>
       <StatusBar style="auto" />
-    </ThemeProvider>
+      <MainLayout />
+    </AuthProvider>
   );
 }

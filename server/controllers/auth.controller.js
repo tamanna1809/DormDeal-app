@@ -42,9 +42,13 @@ export const signup = async (req, res) => {
 
     const token = generateToken(user._id, user.role);
 
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
     res.status(201).json({
       message: "User registered successfully",
       token,
+      user: userResponse,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -68,9 +72,13 @@ export const login = async (req, res) => {
 
     const token = generateToken(user._id, user.role);
 
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
     res.json({
       message: "Login successful",
       token,
+      user: userResponse,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
