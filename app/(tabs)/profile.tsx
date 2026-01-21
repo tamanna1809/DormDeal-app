@@ -20,15 +20,8 @@ export default function Profile() {
         if (!user) return;
         setLoadingItems(true);
         try {
-          const res = await api.get("/items");
-          const all = res.data || [];
-          const mine = all.filter(
-            (item: any) =>
-              !item.isDeleted &&
-              item.sellerId &&
-              (item.sellerId._id === user._id || item.sellerId === user._id)
-          );
-          setMyItems(mine);
+          const res = await api.get(`/items?sellerId=${user._id}`);
+          setMyItems(res.data || []);
         } catch (e) {
           // fail silently on profile; main feed still works
           console.error("Failed to load my items", e);

@@ -12,32 +12,57 @@ export default function Dashboard() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
   const categories = ["All", "Books", "Electronics", "Furniture", "Clothing", "Other"];
 
-  const fetchItems = async () => {
+  const fetchItems = async (pageNum = 1, shouldRefresh = false) => {
     try {
-      const response = await api.get("/items");
-      setItems(response.data);
+      if (pageNum === 1) setLoading(true); // Initial load or refresh
+      
+      const response = await api.get(`/items?page=${pageNum}&limit=10`);
+      const newItems = response.data;
+
+      if (shouldRefresh || pageNum === 1) {
+        setItems(newItems);
+      } else {
+        setItems((prev) => [...prev, ...newItems]);
+      }
+
+      setHasMore(newItems.length === 10);
     } catch (error) {
       console.error("Error fetching items:", error);
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setIsLoadingMore(false);
     }
   };
 
   useFocusEffect(
     useCallback(() => {
-      fetchItems();
+      // For simplicity in this demo, refreshing on focus resets to page 1
+      fetchItems(1, true);
+      setPage(1);
     }, [])
   );
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchItems();
+    setPage(1);
+    fetchItems(1, true);
+  };
+
+  const loadMore = () => {
+    if (!hasMore || isLoadingMore || loading) return;
+    setIsLoadingMore(true);
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchItems(nextPage);
   };
 
   const filteredItems = items.filter((item: any) => {
@@ -116,6 +141,13 @@ export default function Dashboard() {
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            isLoadingMore ? (
+              <ActivityIndicator size="small" color={Colors.light.primary} style={{ marginVertical: 20 }} />
+            ) : null
           }
           ListEmptyComponent={
             <View style={styles.emptyState}>

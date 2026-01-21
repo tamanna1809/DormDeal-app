@@ -32,8 +32,19 @@ export const createItem = async (req, res) => {
 
 // GET ALL ITEMS (DASHBOARD)
 export const getItems = async (req, res) => {
-  const items = await Item.find({ isDeleted: false })
+  const filter = { isDeleted: false };
+  if (req.query.sellerId) {
+    filter.sellerId = req.query.sellerId;
+  }
+
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const items = await Item.find(filter)
     .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
     .populate("sellerId", "name roomNumber phoneNumber year");
   res.json(items);
 };

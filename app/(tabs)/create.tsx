@@ -25,26 +25,12 @@ export default function CreateItem() {
   });
 
   const pickImage = async () => {
-    // No permissions request is necessary for launching the image library
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.3, // Reduced quality to minimize payload size
       base64: true,
-      // Wait, the PRD says "single image". The Mongoose model takes a string `imageUrl`.
-      // The backend likely expects a URL or maybe handles base64? 
-      // User said "don't touch backend". I should assume backend expects a URL.
-      // I probably can't upload files easily without a file upload endpoint.
-      // IF the backend is simple, maybe it takes a URL string?
-      // Let's assume for now I will send a placeholder URL if I can't upload.
-      // OR, maybe I should check if the backend has an upload endpoint?
-      // Step 22 (item routes) shows `createItem` but no upload route.
-      // Generally in these simple projects, people might paste a URL or send base64 string if the DB stores it.
-      // The `Item.js` model lines 26-29 says `imageUrl: { type: String, required: true }`.
-      // I will allow user to paste a URL OR pick an image (and I'll assume I can send base64 data URI as the string? MongoDB has limits though 16MB).
-      // Let's check `createItem` controller if I could... but I can't access controllers easily without `read_file`.
-      // I'll stick to picking image and sending base64 data URI string. It's risky but might work for small images.
     });
 
     if (!result.canceled && result.assets[0].base64) {

@@ -39,7 +39,13 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow DormDeal to access your photos so you can upload images of items you want to sell."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

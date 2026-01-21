@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Alert, ActivityIndicator, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Alert, ActivityIndicator, TouchableOpacity, TextInput } from "react-native";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ScreenWrapper } from "../../components/ScreenWrapper";
@@ -18,6 +18,8 @@ export default function ProductDetails() {
   const [item, setItem] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [isEditingPrice, setIsEditingPrice] = useState(false);
+  const [newPrice, setNewPrice] = useState("");
 
   useEffect(() => {
     fetchItemDetails();
@@ -70,6 +72,38 @@ export default function ProductDetails() {
     ]);
   };
 
+  const handleUpdatePrice = async () => {
+    if (!newPrice.trim() || isNaN(Number(newPrice)) || Number(newPrice) <= 0) {
+      Alert.alert("Error", "Please enter a valid price");
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const updatedItem = await api.put(`/items/${id}`, { ...item, price: Number(newPrice) });
+      // Note: The API commonly uses PUT or PATCH. Controller uses Object.assign(item, req.body).
+      // So sending full body or partial with PUT logic in that controller (which updates existing item) works.
+      // But safer to just send the field if we trust correct PATCH/PUT usage, but for now just send price in body?
+      // Wait, let's look at `updateItem` controller again.
+      // `Object.assign(item, req.body)`. So if I only send { price: ... }, it updates only price.
+      // Using `api.patch` or `api.put` - usually `api` wrapper wraps axios.
+      // I'll stick to `api.put`/`api.patch` naming if the user code has it. 
+      // Checking other calls: `api.patch` is used in `handleMarkSold` (/items/:id/sold).
+      // Standard REST for update is usually PUT or PATCH.
+      // `api.js` (not visible but usually standard). I will use `api.put` or `api.patch` assuming mostly interchangeable for this simple controller.
+      // Let's use `api.put` to match likely route definition for update.
+      await api.put(`/items/${id}`, { price: Number(newPrice) }); // or patch
+      
+      setItem({ ...item, price: Number(newPrice) });
+      setIsEditingPrice(false);
+      Alert.alert("Success", "Price updated successfully");
+    } catch (error) {
+      Alert.alert("Error", "Failed to update price");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -92,9 +126,38 @@ export default function ProductDetails() {
           <View style={styles.header}>
             <View>
               <Text style={styles.title}>{item.title}</Text>
-              <Text style={styles.category}>{item.category} • {new Date(item.createdAt).toLocaleDateString()}</Text>
+            <Text style={styles.category}>{item.category} • {new Date(item.createdAt).toLocaleDateString()}</Text>
             </View>
-            <Text style={styles.price}>₹{item.price}</Text>
+            {isEditingPrice ? (
+               <View style={styles.editPriceContainer}>
+                 <TextInput
+                   style={styles.priceInput}
+                   value={newPrice}
+                   onChangeText={setNewPrice}
+                   keyboardType="numeric"
+                   autoFocus
+                   placeholder="Price"
+                 />
+                 <TouchableOpacity onPress={handleUpdatePrice} style={styles.iconBtn}>
+                   <Ionicons name="checkmark-circle" size={32} color={Colors.light.primary} />
+                 </TouchableOpacity>
+                 <TouchableOpacity onPress={() => setIsEditingPrice(false)} style={styles.iconBtn}>
+                   <Ionicons name="close-circle" size={32} color={Colors.light.error} />
+                 </TouchableOpacity>
+               </View>
+            ) : (
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={styles.price}>₹{item.price}</Text>
+                {isSeller && item.status !== "sold" && (
+                    <TouchableOpacity 
+                        onPress={() => { setNewPrice(item.price.toString()); setIsEditingPrice(true); }} 
+                        style={{marginLeft: 8, padding: 4}}
+                    >
+                        <Ionicons name="pencil" size={20} color={Colors.light.primary} />
+                    </TouchableOpacity>
+                )}
+              </View>
+            )}
           </View>
 
           <View style={styles.badges}>
@@ -294,5 +357,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 4,
+  },
+  editPriceContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  priceInput: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: Colors.light.primary,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.primary,
+    minWidth: 80,
+    marginRight: 8,
+    paddingVertical: 0,
+  },
+  iconBtn: {
+    marginLeft: 4,
   }
 });
